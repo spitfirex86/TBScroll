@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31321.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TBScroll", "TBScroll.vcxproj", "{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+		Release-noadmin|x86 = Release-noadmin|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Debug|x86.ActiveCfg = Debug|Win32
+		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Debug|x86.Build.0 = Debug|Win32
+		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Release|x86.ActiveCfg = Release|Win32
+		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Release|x86.Build.0 = Release|Win32
+		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Release-noadmin|x86.ActiveCfg = Release-noadmin|Win32
+		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Release-noadmin|x86.Build.0 = Release-noadmin|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F76D60E6-6771-40EE-B9C5-9B6D0896CE16}
+	EndGlobalSection
+EndGlobal
