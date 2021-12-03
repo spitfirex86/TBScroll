@@ -14,6 +14,8 @@
 #define IDD_SETTINGS                    129
 #define IDC_VSENSITIVITY                1002
 #define IDC_HSENSITIVITY                1003
+#define IDC_CHECK1                      1004
+#define IDC_REVERSE                     1004
 #define ID_FILE_PLACEHOLDER             32771
 #define ID_FILE_SETTINGS                32772
 #define IDM_SETTINGS                    32773
@@ -26,7 +28,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_CONTROL_VALUE         1005
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

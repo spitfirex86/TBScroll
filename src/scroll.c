@@ -1,14 +1,18 @@
 #include "scroll.h"
 #include "worker.h"
-#include "main.h"
+#include "utils.h"
 #include "framework.h"
 
-#define ABS(x) (((x) >= 0) ? (x) : -(x))
+
+char const C_szKeySensitivityY[] = "VSensitivity";
+char const C_szKeySensitivityX[] = "HSensitivity";
+char const C_szKeyReverse[] = "ReverseScroll";
 
 HHOOK g_hHook = NULL;
 
 int g_lSensitivityX = 120;
 int g_lSensitivityY = 20;
+BOOL g_bReverse = FALSE;
 
 BOOL g_bButtonPressed = FALSE;
 BOOL g_bScrolling = FALSE;
@@ -71,8 +75,11 @@ LRESULT CALLBACK fn_lMouseHook( int nCode, WPARAM wParam, LPARAM lParam )
 			if ( !g_bButtonPressed )
 				break;
 
-			g_lMoveX += p_stMouse->pt.x - g_lStartX;
-			g_lMoveY += p_stMouse->pt.y - g_lStartY;
+			int lDeltaX = p_stMouse->pt.x - g_lStartX;
+			int lDeltaY = p_stMouse->pt.y - g_lStartY;
+
+			g_lMoveX += g_bReverse ? -lDeltaX : lDeltaX;
+			g_lMoveY += g_bReverse ? -lDeltaY : lDeltaY;
 
 			// Vertical scroll
 			if ( ABS(g_lMoveY) > g_lSensitivityY )
@@ -123,46 +130,18 @@ void fn_vDeInitScroll( void )
 	fn_bStopWorkerThread();
 }
 
-BOOL fn_bSetSensitivityYFromStr( char const *szStr )
-{
-	int lBuffer = strtol(szStr, NULL, 10);
-
-	if ( lBuffer <= 0 )
-		return FALSE;
-
-	g_lSensitivityY = lBuffer;
-	return TRUE;
-}
-
-BOOL fn_bSetSensitivityXFromStr( char const *szStr )
-{
-	int lBuffer = strtol(szStr, NULL, 10);
-
-	if ( lBuffer <= 0 )
-		return FALSE;
-
-	g_lSensitivityX = lBuffer;
-	return TRUE;
-}
-
 void fn_vSaveConfig( void )
 {
-	char szBuffer[64];
+	fn_vWriteIntToCfg(C_szKeySensitivityY, g_lSensitivityY);
+	fn_vWriteIntToCfg(C_szKeySensitivityX, g_lSensitivityX);
 
-	sprintf(szBuffer, "%d", g_lSensitivityY);
-	WritePrivateProfileString(g_szAppName, "VSensitivity", szBuffer, g_szConfigPath);
-
-	sprintf(szBuffer, "%d", g_lSensitivityX);
-	WritePrivateProfileString(g_szAppName, "HSensitivity", szBuffer, g_szConfigPath);
+	fn_vWriteIntToCfg(C_szKeyReverse, g_bReverse);
 }
 
 void fn_vLoadConfig( void )
 {
-	char szBuffer[64];
+	g_lSensitivityY = fn_lReadIntFromCfg(C_szKeySensitivityY, 20);
+	g_lSensitivityX = fn_lReadIntFromCfg(C_szKeySensitivityX, 120);
 
-	GetPrivateProfileString(g_szAppName, "VSensitivity", "20", szBuffer, sizeof(szBuffer), g_szConfigPath);
-	fn_bSetSensitivityYFromStr(szBuffer);
-
-	GetPrivateProfileString(g_szAppName, "HSensitivity", "120", szBuffer, sizeof(szBuffer), g_szConfigPath);
-	fn_bSetSensitivityXFromStr(szBuffer);
+	g_bReverse = fn_lReadIntFromCfg(C_szKeyReverse, FALSE);
 }

@@ -142,11 +142,13 @@
     <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\scroll.h" />
     <ClInclude Include="src\worker.h" />
+    <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\scroll.c" />
     <ClCompile Include="src\worker.c" />
+    <ClCompile Include="src\utils.c" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\TBScroll.rc" />

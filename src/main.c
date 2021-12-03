@@ -1,14 +1,15 @@
 #include "main.h"
 #include "scroll.h"
+#include "utils.h"
 #include "framework.h"
 #include "resource.h"
 
 
 #define WM_USER_TRAY (WM_USER+1)
 
-char const g_szAppName[] = "TBScroll";
-char const g_szWindowClass[] = "TBSCROLL";
-char const g_szConfigPath[] = ".\\tbscroll.ini";
+char const C_szAppName[] = "TBScroll";
+char const C_szWindowClass[] = "TBSCROLL";
+char const C_szConfigPath[] = ".\\tbscroll.ini";
 
 HINSTANCE g_hInst = NULL;
 HWND g_hWnd = NULL;
@@ -26,7 +27,7 @@ BOOL fn_bCreateTrayIcon( HWND hWnd )
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	nid.uCallbackMessage = WM_USER_TRAY;
 	nid.hIcon = g_hAppIcon;
-	strcpy(nid.szTip, g_szAppName);
+	strcpy(nid.szTip, C_szAppName);
 
 	return Shell_NotifyIcon(NIM_ADD, &nid);
 }
@@ -64,8 +65,10 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 {
 	static HWND hSensitivityY = NULL;
 	static HWND hSensitivityX = NULL;
+	static HWND hReverse = NULL;
 
 	char szBuffer[16];
+	int lTmpX, lTmpY;
 
 	switch ( ulMsg )
 	{
@@ -85,6 +88,9 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 		sprintf(szBuffer, "%d", g_lSensitivityX);
 		Edit_SetText(hSensitivityX, szBuffer);
 
+		hReverse = GetDlgItem(hDlg, IDC_REVERSE);
+		Button_SetCheck(hReverse, g_bReverse);
+
 		break;
 
 	case WM_COMMAND:
@@ -93,18 +99,23 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 			{
 			case IDOK:
 				Edit_GetText(hSensitivityY, szBuffer, sizeof(szBuffer));
-				if ( !fn_bSetSensitivityYFromStr(szBuffer) )
+				if ( !fn_bIntFromStr(szBuffer, &lTmpY) )
 				{
 					SetFocus(hSensitivityY);
 					break;
 				}
 
 				Edit_GetText(hSensitivityX, szBuffer, sizeof(szBuffer));
-				if ( !fn_bSetSensitivityXFromStr(szBuffer) )
+				if ( !fn_bIntFromStr(szBuffer, &lTmpX) )
 				{
 					SetFocus(hSensitivityX);
 					break;
 				}
+
+				g_lSensitivityY = lTmpY;
+				g_lSensitivityX = lTmpX;
+
+				g_bReverse = Button_GetCheck(hReverse);
 
 				fn_vSaveConfig();
 				// fall through
@@ -147,7 +158,7 @@ BOOL fn_bProcessTrayMsg( HWND hWnd, WPARAM wParam, LPARAM lParam )
 			GetCursorPos(&stClick);
 
 			// Hack to correctly handle focus on the popup menu.
-			// As described in the "remarks" section in the TrackPopupMenu docs.
+			// As described in the "remarks" section of the TrackPopupMenu docs.
 			SetForegroundWindow(hWnd);
 			TrackPopupMenu(hTrayMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN, stClick.x, stClick.y, 0, hWnd, NULL);
 			PostMessage(hWnd, WM_NULL, 0, 0);
@@ -230,7 +241,7 @@ ATOM fn_hRegisterWndClass( HINSTANCE hInst )
 	wcex.hIconSm = g_hAppIcon;
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszClassName = g_szWindowClass;
+	wcex.lpszClassName = C_szWindowClass;
 
 	return RegisterClassEx(&wcex);
 }
@@ -239,16 +250,16 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPCSTR lpCmdLine, int 
 {
 	MSG msg;
 
-	HANDLE hMutex = CreateMutex(NULL, TRUE, g_szAppName);
+	HANDLE hMutex = CreateMutex(NULL, TRUE, C_szAppName);
 	if ( !hMutex || GetLastError() == ERROR_ALREADY_EXISTS )
 	{
-		MessageBox(NULL, "Another instance of TBScroll is already running.", g_szAppName, MB_OK | MB_ICONERROR);
+		MessageBox(NULL, "Another instance of TBScroll is already running.", C_szAppName, MB_OK | MB_ICONERROR);
 		return 0;
 	}
 
 	g_hAppIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_TBSCROLL));
 	fn_hRegisterWndClass(hInst);
-	HWND hWnd = CreateWindow(g_szWindowClass, g_szAppName, WS_OVERLAPPEDWINDOW, 0, 0, 0, 0, NULL, NULL, hInst, NULL);
+	HWND hWnd = CreateWindow(C_szWindowClass, C_szAppName, WS_OVERLAPPEDWINDOW, 0, 0, 0, 0, NULL, NULL, hInst, NULL);
 
 	if ( !hWnd )
 		return 0;
@@ -263,7 +274,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPCSTR lpCmdLine, int 
 	fn_vLoadConfig();
 	if ( !fn_bInitScroll() )
 	{
-		MessageBox(NULL, "Cannot initialize TBScroll.", g_szAppName, MB_OK | MB_ICONERROR);
+		MessageBox(NULL, "Cannot initialize TBScroll.", C_szAppName, MB_OK | MB_ICONERROR);
 		return 0;
 	}
 

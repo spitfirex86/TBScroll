@@ -1,6 +1,6 @@
 ﻿#pragma once
 
 
-extern char const g_szAppName[];
-extern char const g_szWindowClass[];
-extern char const g_szConfigPath[];
+extern char const C_szAppName[];
+extern char const C_szWindowClass[];
+extern char const C_szConfigPath[];

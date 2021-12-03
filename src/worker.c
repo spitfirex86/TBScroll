@@ -40,6 +40,7 @@ void fn_vScrollWorkerThread( void *unused )
 			break;
 
 		case WM_APP_STOPTHREAD:
+			// Stop the message pump and exit thread
 			return;
 		}
 	}
@@ -66,14 +67,13 @@ BOOL fn_bStartWorkerThread( void )
 	g_hEventWorkerStarted = CreateEvent(NULL, TRUE, FALSE, "WorkerThreadStarted");
 	g_hWorker = (HANDLE)_beginthread(fn_vScrollWorkerThread, 0, 0);
 
-	if ( WaitForSingleObject(g_hEventWorkerStarted, INFINITE) == WAIT_OBJECT_0 )
-		return TRUE;
+	BOOL bResult = (WaitForSingleObject(g_hEventWorkerStarted, INFINITE) == WAIT_OBJECT_0);
+	CloseHandle(g_hEventWorkerStarted);
 
-	return FALSE;
+	return bResult;
 }
 
 BOOL fn_bStopWorkerThread( void )
 {
-	CloseHandle(g_hEventWorkerStarted);
 	return PostThreadMessage(g_ulWorkerId, WM_APP_STOPTHREAD, 0, 0);
 }
