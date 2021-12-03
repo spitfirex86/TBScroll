@@ -12,6 +12,10 @@ If you click without moving the cursor, the default middle click action is perfo
 - Minimal CPU and memory usage
 - No external libraries, dependencies etc. required
 
+### Usage
+Download and run TBScrl32.exe. The program starts silently and creates a system tray icon.  
+To open the settings menu, right-click the icon.
+
 ### Known bugs
 - Glitchy behavior in games/programs using raw mouse input
 
