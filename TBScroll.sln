@@ -8,12 +8,15 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
+		Debug-noadmin|x86 = Debug-noadmin|x86
 		Release|x86 = Release|x86
 		Release-noadmin|x86 = Release-noadmin|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Debug|x86.ActiveCfg = Debug|Win32
 		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Debug|x86.Build.0 = Debug|Win32
+		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Debug-noadmin|x86.ActiveCfg = Debug-noadmin|Win32
+		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Debug-noadmin|x86.Build.0 = Debug-noadmin|Win32
 		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Release|x86.ActiveCfg = Release|Win32
 		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Release|x86.Build.0 = Release|Win32
 		{B4A234D1-D4D0-45C1-92C6-9103BA640B6D}.Release-noadmin|x86.ActiveCfg = Release-noadmin|Win32

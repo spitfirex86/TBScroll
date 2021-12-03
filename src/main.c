@@ -42,12 +42,56 @@ BOOL fn_vDeleteTrayIcon( HWND hWnd )
 	return Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
+BOOL fn_bGetVersionNum( char *szOut )
+{
+	char szFilename[MAX_PATH + 1];
+
+	if ( !GetModuleFileName(NULL, szFilename, MAX_PATH) )
+		return FALSE;
+
+	DWORD ulHandle;
+	DWORD ulSize = GetFileVersionInfoSize(szFilename, &ulHandle);
+
+	if ( ulSize == 0 )
+		return FALSE;
+
+	void *pData = malloc(ulSize);
+
+	if ( !GetFileVersionInfo(szFilename, NULL, ulSize, pData) )
+		return FALSE;
+
+	VS_FIXEDFILEINFO *p_stFixedInfo;
+	DWORD ulFixedInfoSize;
+
+	if ( !VerQueryValue(pData, "\\", (PVOID *)&p_stFixedInfo, &ulFixedInfoSize) )
+		return FALSE;
+
+	sprintf(szOut, "%d.%d.%d.%d",
+	        HIWORD(p_stFixedInfo->dwProductVersionMS),
+	        LOWORD(p_stFixedInfo->dwProductVersionMS),
+	        HIWORD(p_stFixedInfo->dwProductVersionLS),
+	        LOWORD(p_stFixedInfo->dwProductVersionLS)
+	);
+
+	free(pData);
+	return TRUE;
+}
+
 
 INT_PTR CALLBACK fn_bAboutDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPARAM lParam )
 {
+	char szVersion[16];
+	char szBuffer[64];
+
 	switch ( ulMsg )
 	{
 	case WM_INITDIALOG:
+
+		if ( fn_bGetVersionNum(szVersion) )
+		{
+			sprintf(szBuffer, "Version %s", szVersion);
+			SetDlgItemText(hDlg, IDC_VERSION, szBuffer);
+		}
 		return TRUE;
 
 	case WM_COMMAND:
