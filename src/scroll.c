@@ -1,12 +1,14 @@
 #include "scroll.h"
+#include "buttons.h"
 #include "worker.h"
 #include "utils.h"
 #include "framework.h"
 
 
-char const C_szKeySensitivityY[] = "VSensitivity";
-char const C_szKeySensitivityX[] = "HSensitivity";
-char const C_szKeyReverse[] = "ReverseScroll";
+char const *C_szKeySensitivityY = "VSensitivity";
+char const *C_szKeySensitivityX = "HSensitivity";
+char const *C_szKeyReverse = "ReverseScroll";
+char const *C_szKeyButton = "Button";
 
 HHOOK g_hHook = NULL;
 
@@ -27,91 +29,88 @@ int g_lMoveY = 0;
 LRESULT CALLBACK fn_lMouseHook( int nCode, WPARAM wParam, LPARAM lParam )
 {
 	MSLLHOOKSTRUCT *p_stMouse = (MSLLHOOKSTRUCT *)lParam;
-
+	tdstScrollButton const *p_stButton = M_p_stGetCurrentButton();
+	
 	if ( nCode < 0 )
 		return CallNextHookEx(g_hHook, nCode, wParam, lParam);
 
-	switch ( wParam )
+	if ( wParam == p_stButton->ulMessageDown && HIWORD(p_stMouse->mouseData) == p_stButton->uwParam )
 	{
-	case WM_MBUTTONDOWN:
-		{
-			// Pass emulated click to other hooks
-			if ( g_bEmulatingClick )
-				break;
+		// Pass emulated click to other hooks
+		if ( g_bEmulatingClick )
+			goto j_NextHook;
 
-			g_bButtonPressed = TRUE;
-			g_bScrolling = FALSE;
-			g_lStartX = p_stMouse->pt.x;
-			g_lStartY = p_stMouse->pt.y;
-			g_lMoveX = 0;
+		g_bButtonPressed = TRUE;
+		g_bScrolling = FALSE;
+		g_lStartX = p_stMouse->pt.x;
+		g_lStartY = p_stMouse->pt.y;
+		g_lMoveX = 0;
+		g_lMoveY = 0;
+
+		return TRUE;
+	}
+	else if ( wParam == p_stButton->ulMessageUp && HIWORD(p_stMouse->mouseData) == p_stButton->uwParam )
+	{
+		if ( g_bEmulatingClick )
+		{
+			// We are done emulating the click, pass to other hooks
+			g_bEmulatingClick = FALSE;
+			goto j_NextHook;
+		}
+
+		g_bButtonPressed = FALSE;
+
+		// If scrolling did not occur, emulate click
+		if ( !g_bScrolling )
+		{
+			g_bEmulatingClick = TRUE;
+			fn_vQueueClick(g_lStartX, g_lStartY);
+		}
+
+		return TRUE;
+	}
+	else if ( wParam == WM_MOUSEMOVE )
+	{
+		if ( !g_bButtonPressed )
+			goto j_NextHook;
+
+		int lDeltaX = p_stMouse->pt.x - g_lStartX;
+		int lDeltaY = p_stMouse->pt.y - g_lStartY;
+
+		g_lMoveX += g_bReverse ? -lDeltaX : lDeltaX;
+		g_lMoveY += g_bReverse ? -lDeltaY : lDeltaY;
+
+		// Vertical scroll
+		if ( ABS(g_lMoveY) > g_lSensitivityY )
+		{
+			g_bScrolling = TRUE;
+
+			int lSteps = g_lMoveY / g_lSensitivityY;
+			int lDelta = -lSteps * WHEEL_DELTA;
+
+			g_lMoveY -= lSteps * g_lSensitivityY;
+
+			fn_vQueueVScroll(lDelta);
+		}
+
+		// Horizontal scroll
+		if ( ABS(g_lMoveX) > g_lSensitivityX )
+		{
+			g_bScrolling = TRUE;
+
+			int lSteps = g_lMoveX / g_lSensitivityX;
+			int lDelta = lSteps * WHEEL_DELTA;
+
+			g_lMoveX -= lSteps * g_lSensitivityX;
 			g_lMoveY = 0;
 
-			return TRUE;
+			fn_vQueueHScroll(lDelta);
 		}
 
-	case WM_MBUTTONUP:
-		{
-			if ( g_bEmulatingClick )
-			{
-				// We are done emulating the click, pass to other hooks
-				g_bEmulatingClick = FALSE;
-				break;
-			}
-
-			g_bButtonPressed = FALSE;
-
-			// If scrolling did not occur, emulate click
-			if ( !g_bScrolling )
-			{
-				g_bEmulatingClick = TRUE;
-				fn_vQueueClick(g_lStartX, g_lStartY);
-			}
-
-			return TRUE;
-		}
-
-	case WM_MOUSEMOVE:
-		{
-			if ( !g_bButtonPressed )
-				break;
-
-			int lDeltaX = p_stMouse->pt.x - g_lStartX;
-			int lDeltaY = p_stMouse->pt.y - g_lStartY;
-
-			g_lMoveX += g_bReverse ? -lDeltaX : lDeltaX;
-			g_lMoveY += g_bReverse ? -lDeltaY : lDeltaY;
-
-			// Vertical scroll
-			if ( ABS(g_lMoveY) > g_lSensitivityY )
-			{
-				g_bScrolling = TRUE;
-
-				int lSteps = g_lMoveY / g_lSensitivityY;
-				int lDelta = -lSteps * WHEEL_DELTA;
-
-				g_lMoveY -= lSteps * g_lSensitivityY;
-
-				fn_vQueueVScroll(lDelta);
-			}
-
-			// Horizontal scroll
-			if ( ABS(g_lMoveX) > g_lSensitivityX )
-			{
-				g_bScrolling = TRUE;
-
-				int lSteps = g_lMoveX / g_lSensitivityX;
-				int lDelta = lSteps * WHEEL_DELTA;
-
-				g_lMoveX -= lSteps * g_lSensitivityX;
-				g_lMoveY = 0;
-
-				fn_vQueueHScroll(lDelta);
-			}
-
-			return TRUE;
-		}
+		return TRUE;
 	}
 
+j_NextHook:
 	return CallNextHookEx(g_hHook, nCode, wParam, lParam);
 }
 
@@ -136,6 +135,8 @@ void fn_vSaveConfig( void )
 	fn_vWriteIntToCfg(C_szKeySensitivityX, g_lSensitivityX);
 
 	fn_vWriteIntToCfg(C_szKeyReverse, g_bReverse);
+
+	fn_vWriteIntToCfg(C_szKeyButton, g_eCurrentButton);
 }
 
 void fn_vLoadConfig( void )
@@ -144,4 +145,6 @@ void fn_vLoadConfig( void )
 	g_lSensitivityX = fn_lReadIntFromCfg(C_szKeySensitivityX, 120);
 
 	g_bReverse = fn_lReadIntFromCfg(C_szKeyReverse, FALSE);
+
+	g_eCurrentButton = fn_lReadIntFromCfg(C_szKeyButton, C_DefaultScrollButton);
 }

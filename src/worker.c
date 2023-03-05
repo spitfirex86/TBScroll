@@ -1,4 +1,5 @@
 #include "worker.h"
+#include "buttons.h"
 #include "framework.h"
 
 
@@ -27,8 +28,8 @@ void fn_vScrollWorkerThread( void *unused )
 		switch ( msg.message )
 		{
 		case WM_APP_CLICK:
-			mouse_event(MOUSEEVENTF_MIDDLEDOWN, msg.wParam, msg.lParam, 0, 0);
-			mouse_event(MOUSEEVENTF_MIDDLEUP, msg.wParam, msg.lParam, 0, 0);
+			mouse_event(M_p_stGetCurrentButton()->ulEventDown, msg.wParam, msg.lParam, M_p_stGetCurrentButton()->uwParam, 0);
+			mouse_event(M_p_stGetCurrentButton()->ulEventUp, msg.wParam, msg.lParam, M_p_stGetCurrentButton()->uwParam, 0);
 			break;
 
 		case WM_APP_VSCROLL:

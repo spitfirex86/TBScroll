@@ -1,5 +1,6 @@
 #include "main.h"
 #include "scroll.h"
+#include "buttons.h"
 #include "utils.h"
 #include "framework.h"
 #include "resource.h"
@@ -7,9 +8,9 @@
 
 #define WM_USER_TRAY (WM_USER+1)
 
-char const C_szAppName[] = "TBScroll";
-char const C_szWindowClass[] = "TBSCROLL";
-char const C_szConfigPath[] = ".\\tbscroll.ini";
+char const *C_szAppName = "TBScroll";
+char const *C_szWindowClass = "TBSCROLL";
+char const *C_szConfigPath = ".\\tbscroll.ini";
 
 HINSTANCE g_hInst = NULL;
 HWND g_hWnd = NULL;
@@ -77,6 +78,31 @@ BOOL fn_bGetVersionNum( char *szOut )
 	return TRUE;
 }
 
+void fn_vPopulateButtonsCB( HWND hCB )
+{
+	ComboBox_ResetContent(hCB);
+
+	for ( int i = 0; i < e_NbScrollButton; i++ )
+	{
+		tdstScrollButton const *p_stButton = &g_a_stScrollButtons[i];
+
+		int lIdx = ComboBox_AddString(hCB, p_stButton->szName);
+		ComboBox_SetItemData(hCB, lIdx, p_stButton->eId);
+	}
+
+	ComboBox_SetCurSel(hCB, g_eCurrentButton);
+}
+
+tdeScrollButtonId fn_eGetChosenButtonFromCB( HWND hCB )
+{
+	int lIdx = ComboBox_GetCurSel(hCB);
+
+	if ( lIdx == CB_ERR )
+		return C_DefaultScrollButton;
+
+	return (tdeScrollButtonId)ComboBox_GetItemData(hCB, lIdx);
+}
+
 
 INT_PTR CALLBACK fn_bAboutDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPARAM lParam )
 {
@@ -86,7 +112,6 @@ INT_PTR CALLBACK fn_bAboutDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPARAM 
 	switch ( ulMsg )
 	{
 	case WM_INITDIALOG:
-
 		if ( fn_bGetVersionNum(szVersion) )
 		{
 			sprintf(szBuffer, "Version %s", szVersion);
@@ -110,6 +135,7 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 	static HWND hSensitivityY = NULL;
 	static HWND hSensitivityX = NULL;
 	static HWND hReverse = NULL;
+	static HWND hScrollButton = NULL;
 
 	char szBuffer[16];
 	int lTmpX, lTmpY;
@@ -135,7 +161,10 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 		hReverse = GetDlgItem(hDlg, IDC_REVERSE);
 		Button_SetCheck(hReverse, g_bReverse);
 
-		break;
+		hScrollButton = GetDlgItem(hDlg, IDC_SBUTTON);
+		fn_vPopulateButtonsCB(hScrollButton);
+
+		return TRUE;
 
 	case WM_COMMAND:
 		{
@@ -146,48 +175,42 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 				if ( !fn_bIntFromStr(szBuffer, &lTmpY) )
 				{
 					SetFocus(hSensitivityY);
-					break;
+					return TRUE;
 				}
 
 				Edit_GetText(hSensitivityX, szBuffer, sizeof(szBuffer));
 				if ( !fn_bIntFromStr(szBuffer, &lTmpX) )
 				{
 					SetFocus(hSensitivityX);
-					break;
+					return TRUE;
 				}
 
 				g_lSensitivityY = lTmpY;
 				g_lSensitivityX = lTmpX;
-
 				g_bReverse = Button_GetCheck(hReverse);
+				g_eCurrentButton = fn_eGetChosenButtonFromCB(hScrollButton);
 
 				fn_vSaveConfig();
 				// fall through
 			case IDCANCEL:
 				EndDialog(hDlg, LOWORD(wParam));
-				break;
-
-			default:
-				return FALSE;
+				return TRUE;
 			}
 		}
 		break;
 
 	case WM_CLOSE:
 		EndDialog(hDlg, IDCANCEL);
-		break;
+		return TRUE;
 
 	case WM_DESTROY:
 		g_hSettingsDlg = NULL;
 		hSensitivityY = NULL;
 		hSensitivityX = NULL;
-		break;
-
-	default:
-		return FALSE;
+		return TRUE;
 	}
 
-	return TRUE;
+	return FALSE;
 }
 
 BOOL fn_bProcessTrayMsg( HWND hWnd, WPARAM wParam, LPARAM lParam )
@@ -207,13 +230,10 @@ BOOL fn_bProcessTrayMsg( HWND hWnd, WPARAM wParam, LPARAM lParam )
 			TrackPopupMenu(hTrayMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN, stClick.x, stClick.y, 0, hWnd, NULL);
 			PostMessage(hWnd, WM_NULL, 0, 0);
 		}
-		break;
-
-	default:
-		return FALSE;
+		return TRUE;
 	}
 
-	return TRUE;
+	return FALSE;
 }
 
 BOOL fn_bProcessCmds( HWND hWnd, WPARAM wParam, LPARAM lParam )
@@ -224,21 +244,18 @@ BOOL fn_bProcessCmds( HWND hWnd, WPARAM wParam, LPARAM lParam )
 		g_hSettingsDlg
 			? SetForegroundWindow(g_hSettingsDlg)
 			: DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SETTINGS), hWnd, fn_bSettingsDlgProc);
-		break;
+		return TRUE;
 
 	case IDM_ABOUT:
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, fn_bAboutDlgProc);
-		break;
+		return TRUE;
 
 	case IDM_EXIT:
 		DestroyWindow(hWnd);
-		break;
-
-	default:
-		return FALSE;
+		return TRUE;
 	}
 
-	return TRUE;
+	return FALSE;
 }
 
 LRESULT CALLBACK fn_lMainWndProc( HWND hWnd, UINT ulMsg, WPARAM wParam, LPARAM lParam )
@@ -247,28 +264,25 @@ LRESULT CALLBACK fn_lMainWndProc( HWND hWnd, UINT ulMsg, WPARAM wParam, LPARAM l
 	{
 	case WM_CREATE:
 		fn_bCreateTrayIcon(hWnd);
-		break;
+		return 0;
 
 	case WM_USER_TRAY:
-		if ( !fn_bProcessTrayMsg(hWnd, wParam, lParam) )
-			DefWindowProc(hWnd, ulMsg, wParam, lParam);
+		if ( fn_bProcessTrayMsg(hWnd, wParam, lParam) )
+			return 0;
 		break;
 
 	case WM_COMMAND:
-		if ( !fn_bProcessCmds(hWnd, wParam, lParam) )
-			DefWindowProc(hWnd, ulMsg, wParam, lParam);
+		if ( fn_bProcessCmds(hWnd, wParam, lParam) )
+			return 0;
 		break;
 
 	case WM_DESTROY:
 		fn_vDeleteTrayIcon(hWnd);
 		PostQuitMessage(0);
-		break;
-
-	default:
-		return DefWindowProc(hWnd, ulMsg, wParam, lParam);
+		return 0;
 	}
 
-	return 0;
+	return DefWindowProc(hWnd, ulMsg, wParam, lParam);
 }
 
 ATOM fn_hRegisterWndClass( HINSTANCE hInst )

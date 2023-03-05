@@ -20,9 +20,8 @@ To open the settings menu, right-click the icon.
 - Glitchy behavior in games/programs using raw mouse input
 
 ### To-do
-- Option to use XButtons instead of middle click to scroll
 - Customizable click action
-- Quick disable hotkey/modifier for programs that require middle click dragging
+- Quick disable hotkey/modifier
 
 ### Download
 Latest release: [EXE](https://github.com/spitfirex86/TBScroll/releases/latest/download/TBScrl32.exe)

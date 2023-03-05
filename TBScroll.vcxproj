@@ -177,6 +177,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\buttons.h" />
     <ClInclude Include="src\framework.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\Resource.h" />
@@ -185,6 +186,7 @@
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\buttons.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\scroll.c" />
     <ClCompile Include="src\worker.c" />
