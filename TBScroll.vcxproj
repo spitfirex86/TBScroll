@@ -78,7 +78,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-noadmin|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>TBScrl32</TargetName>
+    <TargetName>TBScrl32-noadmin</TargetName>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -90,7 +90,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-noadmin|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>TBScrl32</TargetName>
+    <TargetName>TBScrl32-noadmin</TargetName>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
   </PropertyGroup>

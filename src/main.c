@@ -260,10 +260,14 @@ BOOL fn_bProcessCmds( HWND hWnd, WPARAM wParam, LPARAM lParam )
 
 LRESULT CALLBACK fn_lMainWndProc( HWND hWnd, UINT ulMsg, WPARAM wParam, LPARAM lParam )
 {
+	static UINT s_uTaskbarMsg;
+
 	switch ( ulMsg )
 	{
 	case WM_CREATE:
 		fn_bCreateTrayIcon(hWnd);
+		/* needed to handle re-creating tray icon if explorer restarts */
+		s_uTaskbarMsg = RegisterWindowMessage("TaskbarCreated");
 		return 0;
 
 	case WM_USER_TRAY:
@@ -280,6 +284,15 @@ LRESULT CALLBACK fn_lMainWndProc( HWND hWnd, UINT ulMsg, WPARAM wParam, LPARAM l
 		fn_vDeleteTrayIcon(hWnd);
 		PostQuitMessage(0);
 		return 0;
+
+	default:
+		if ( ulMsg == s_uTaskbarMsg )
+		{
+			/* explorer died and/or was restarted, create the icon again */
+			fn_bCreateTrayIcon(hWnd);
+			return 0;
+		}
+		break;
 	}
 
 	return DefWindowProc(hWnd, ulMsg, wParam, lParam);
