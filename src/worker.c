@@ -28,9 +28,12 @@ void fn_vScrollWorkerThread( void *unused )
 		switch ( msg.message )
 		{
 		case WM_APP_CLICK:
-			mouse_event(M_p_stGetCurrentButton()->ulEventDown, msg.wParam, msg.lParam, M_p_stGetCurrentButton()->uwParam, 0);
-			mouse_event(M_p_stGetCurrentButton()->ulEventUp, msg.wParam, msg.lParam, M_p_stGetCurrentButton()->uwParam, 0);
+		{
+			tdstScrollButton const *p_stButton = M_p_stGetCurrentEmulatedButton();
+			mouse_event(p_stButton->ulEventDown, msg.wParam, msg.lParam, p_stButton->uwParam, 0);
+			mouse_event(p_stButton->ulEventUp, msg.wParam, msg.lParam, p_stButton->uwParam, 0);
 			break;
+		}
 
 		case WM_APP_VSCROLL:
 			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, msg.lParam, 0);

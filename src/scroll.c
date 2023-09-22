@@ -30,16 +30,19 @@ LRESULT CALLBACK fn_lMouseHook( int nCode, WPARAM wParam, LPARAM lParam )
 {
 	MSLLHOOKSTRUCT *p_stMouse = (MSLLHOOKSTRUCT *)lParam;
 	tdstScrollButton const *p_stButton = M_p_stGetCurrentButton();
+	tdstScrollButton const *p_stButtonEmulated = M_p_stGetCurrentEmulatedButton();
 	
 	if ( nCode < 0 )
 		return CallNextHookEx(g_hHook, nCode, wParam, lParam);
 
-	if ( wParam == p_stButton->ulMessageDown && HIWORD(p_stMouse->mouseData) == p_stButton->uwParam )
+	if ( wParam == p_stButtonEmulated->ulMessageDown && HIWORD(p_stMouse->mouseData) == p_stButtonEmulated->uwParam )
 	{
 		// Pass emulated click to other hooks
 		if ( g_bEmulatingClick )
 			goto j_NextHook;
-
+	}
+	if ( wParam == p_stButton->ulMessageDown && HIWORD(p_stMouse->mouseData) == p_stButton->uwParam )
+	{
 		g_bButtonPressed = TRUE;
 		g_bScrolling = FALSE;
 		g_lStartX = p_stMouse->pt.x;
@@ -49,7 +52,8 @@ LRESULT CALLBACK fn_lMouseHook( int nCode, WPARAM wParam, LPARAM lParam )
 
 		return TRUE;
 	}
-	else if ( wParam == p_stButton->ulMessageUp && HIWORD(p_stMouse->mouseData) == p_stButton->uwParam )
+
+	if ( wParam == p_stButtonEmulated->ulMessageUp && HIWORD(p_stMouse->mouseData) == p_stButtonEmulated->uwParam )
 	{
 		if ( g_bEmulatingClick )
 		{
@@ -57,7 +61,9 @@ LRESULT CALLBACK fn_lMouseHook( int nCode, WPARAM wParam, LPARAM lParam )
 			g_bEmulatingClick = FALSE;
 			goto j_NextHook;
 		}
-
+	}
+	if ( wParam == p_stButton->ulMessageUp && HIWORD(p_stMouse->mouseData) == p_stButton->uwParam )
+	{
 		g_bButtonPressed = FALSE;
 
 		// If scrolling did not occur, emulate click
