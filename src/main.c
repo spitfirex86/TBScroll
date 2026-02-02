@@ -58,7 +58,7 @@ BOOL fn_bGetVersionNum( char *szOut )
 
 	void *pData = malloc(ulSize);
 
-	if ( !GetFileVersionInfo(szFilename, NULL, ulSize, pData) )
+	if ( !GetFileVersionInfo(szFilename, 0, ulSize, pData) )
 		return FALSE;
 
 	VS_FIXEDFILEINFO *p_stFixedInfo;
@@ -67,11 +67,11 @@ BOOL fn_bGetVersionNum( char *szOut )
 	if ( !VerQueryValue(pData, "\\", (PVOID *)&p_stFixedInfo, &ulFixedInfoSize) )
 		return FALSE;
 
-	sprintf(szOut, "%d.%d.%d.%d",
+	sprintf(szOut, "%d.%d",
 	        HIWORD(p_stFixedInfo->dwProductVersionMS),
-	        LOWORD(p_stFixedInfo->dwProductVersionMS),
-	        HIWORD(p_stFixedInfo->dwProductVersionLS),
-	        LOWORD(p_stFixedInfo->dwProductVersionLS)
+	        LOWORD(p_stFixedInfo->dwProductVersionMS)
+	        //HIWORD(p_stFixedInfo->dwProductVersionLS),
+	        //LOWORD(p_stFixedInfo->dwProductVersionLS)
 	);
 
 	free(pData);
@@ -136,6 +136,7 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 	static HWND hSensitivityX = NULL;
 	static HWND hReverse = NULL;
 	static HWND hScrollButton = NULL;
+	static HWND hSmooth = NULL;
 
 	char szBuffer[16];
 	int lTmpX, lTmpY;
@@ -160,6 +161,9 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 
 		hReverse = GetDlgItem(hDlg, IDC_REVERSE);
 		Button_SetCheck(hReverse, g_bReverse);
+
+		hSmooth = GetDlgItem(hDlg, IDC_SMOOTH);
+		Button_SetCheck(hSmooth, g_bSmooth);
 
 		hScrollButton = GetDlgItem(hDlg, IDC_SBUTTON);
 		fn_vPopulateButtonsCB(hScrollButton);
@@ -188,8 +192,10 @@ INT_PTR CALLBACK fn_bSettingsDlgProc( HWND hDlg, UINT ulMsg, WPARAM wParam, LPAR
 				g_lSensitivityY = lTmpY;
 				g_lSensitivityX = lTmpX;
 				g_bReverse = Button_GetCheck(hReverse);
+				g_bSmooth = Button_GetCheck(hSmooth);
 				g_eCurrentButton = fn_eGetChosenButtonFromCB(hScrollButton);
-
+				
+				fn_vUpdateConfig();
 				fn_vSaveConfig();
 				// fall through
 			case IDCANCEL:

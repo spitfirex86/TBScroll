@@ -8,6 +8,7 @@
 char const *C_szKeySensitivityY = "VSensitivity";
 char const *C_szKeySensitivityX = "HSensitivity";
 char const *C_szKeyReverse = "ReverseScroll";
+char const *C_szKeySmooth = "SmoothScroll";
 char const *C_szKeyButton = "Button";
 
 HHOOK g_hHook = NULL;
@@ -15,6 +16,12 @@ HHOOK g_hHook = NULL;
 int g_lSensitivityX = 120;
 int g_lSensitivityY = 20;
 BOOL g_bReverse = FALSE;
+
+#define SMOOTH_FACTOR 10
+BOOL g_bSmooth = FALSE;
+int g_lEffectiveSensX = 12;
+int g_lEffectiveSensY = 2;
+int g_lEffectiveDelta = WHEEL_DELTA / 10;
 
 BOOL g_bButtonPressed = FALSE;
 BOOL g_bScrolling = FALSE;
@@ -87,28 +94,29 @@ LRESULT CALLBACK fn_lMouseHook( int nCode, WPARAM wParam, LPARAM lParam )
 		g_lMoveY += g_bReverse ? -lDeltaY : lDeltaY;
 
 		// Vertical scroll
-		if ( ABS(g_lMoveY) > g_lSensitivityY )
+		if ( ABS(g_lMoveY) > g_lEffectiveSensY )
 		{
 			g_bScrolling = TRUE;
 
-			int lSteps = g_lMoveY / g_lSensitivityY;
-			int lDelta = -lSteps * WHEEL_DELTA;
+			int lSteps = g_lMoveY / g_lEffectiveSensY;
+			int lDelta = -lSteps * g_lEffectiveDelta;
 
-			g_lMoveY -= lSteps * g_lSensitivityY;
+			g_lMoveY -= lSteps * g_lEffectiveSensY;
 
 			fn_vQueueVScroll(lDelta);
 		}
 
 		// Horizontal scroll
-		if ( ABS(g_lMoveX) > g_lSensitivityX )
+		if ( ABS(g_lMoveX) > g_lEffectiveSensX )
 		{
 			g_bScrolling = TRUE;
 
-			int lSteps = g_lMoveX / g_lSensitivityX;
-			int lDelta = lSteps * WHEEL_DELTA;
+			int lSteps = g_lMoveX / g_lEffectiveSensX;
+			int lDelta = lSteps * g_lEffectiveDelta;
 
-			g_lMoveX -= lSteps * g_lSensitivityX;
-			g_lMoveY = 0;
+			g_lMoveX -= lSteps * g_lEffectiveSensX;
+			if ( !g_bSmooth ) // cancel out the other direction in detent mode
+				g_lMoveY = 0;
 
 			fn_vQueueHScroll(lDelta);
 		}
@@ -141,6 +149,7 @@ void fn_vSaveConfig( void )
 	fn_vWriteIntToCfg(C_szKeySensitivityX, g_lSensitivityX);
 
 	fn_vWriteIntToCfg(C_szKeyReverse, g_bReverse);
+	fn_vWriteIntToCfg(C_szKeySmooth, g_bSmooth);
 
 	fn_vWriteIntToCfg(C_szKeyButton, g_eCurrentButton);
 }
@@ -151,6 +160,36 @@ void fn_vLoadConfig( void )
 	g_lSensitivityX = fn_lReadIntFromCfg(C_szKeySensitivityX, 120);
 
 	g_bReverse = fn_lReadIntFromCfg(C_szKeyReverse, FALSE);
+	g_bSmooth = fn_lReadIntFromCfg(C_szKeySmooth, FALSE);
 
 	g_eCurrentButton = fn_lReadIntFromCfg(C_szKeyButton, C_DefaultScrollButton);
+	fn_vUpdateConfig();
+}
+
+void fn_vUpdateConfig( void )
+{
+	if ( g_lSensitivityX <= 0 )
+		g_lSensitivityX = INT_MAX;
+
+	if ( g_lSensitivityY <= 0 )
+		g_lSensitivityY = INT_MAX;
+
+	if ( g_bSmooth )
+	{
+		g_lEffectiveSensX = g_lSensitivityX / SMOOTH_FACTOR;
+		if ( g_lEffectiveSensX == 0 && g_lSensitivityY > 0 )
+			g_lEffectiveSensX = 1;
+
+		g_lEffectiveSensY = g_lSensitivityY / SMOOTH_FACTOR;
+		if ( g_lEffectiveSensY == 0 && g_lSensitivityY > 0 )
+			g_lEffectiveSensY = 1;
+
+		g_lEffectiveDelta = WHEEL_DELTA / SMOOTH_FACTOR;
+	}
+	else
+	{
+		g_lEffectiveSensX = g_lSensitivityX;
+		g_lEffectiveSensY = g_lSensitivityY;
+		g_lEffectiveDelta = WHEEL_DELTA;
+	}
 }

@@ -16,7 +16,8 @@
 #define IDC_HSENSITIVITY                1003
 #define IDC_REVERSE                     1004
 #define IDC_VERSION                     1005
-#define IDC_COMBO1                      1006
+#define IDC_REVERSE2                    1005
+#define IDC_SMOOTH                      1005
 #define IDC_SBUTTON                     1006
 #define ID_FILE_PLACEHOLDER             32771
 #define ID_FILE_SETTINGS                32772
