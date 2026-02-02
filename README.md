@@ -8,6 +8,7 @@ If you click without moving the cursor, the default middle click action is perfo
 ### Features
 - Wheel-like scrolling in all applications
 - Customizable sensitivity options
+- Customizable scrolling button (incl. the ability to emulate MMB click with buttons 3 and 4)
 - "Natural" scrolling (reverse scroll direction)
 - Minimal CPU and memory usage
 - No external libraries, dependencies etc. required
@@ -20,7 +21,6 @@ To open the settings menu, right-click the icon.
 - Glitchy behavior in games/programs using raw mouse input
 
 ### To-do
-- Customizable click action
 - Quick disable hotkey/modifier
 
 ### Download
