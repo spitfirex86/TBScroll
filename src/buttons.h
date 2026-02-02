@@ -13,6 +13,7 @@ typedef enum tdeScrollButtonId_
 	e_SB_Button5,
 	e_SB_Button4M,
 	e_SB_Button5M,
+	e_SB_RightButton,
 
 	e_NbScrollButton
 }
